@@ -34,31 +34,31 @@ module.exports = {
     },
 
     // 检查是否包含敏感词，检查到一个则停止检测
-    sensitiveCheck(word) {
-        word = this.removeSpace(word);
-        if (word === "" || word === null) {
-            return word;
+    sensitiveCheck(text) {
+        text = this.removeSpace(text);
+        if (text === "" || text === null) {
+            return text;
         }
 
         let parent = this.tree,
             exists = false;
 
-        for (let i = 0; i < word.length; i++) {
+        for (let i = 0; i < text.length; i++) {
             // TODO 加强干扰字符的处理
-            if (['*', '', ' ', ',', '.', '?'].indexOf(word[ i ]) !== -1) {
+            if (['*', '', ' ', ',', '.', '?'].indexOf(text[ i ]) !== -1) {
                 // 过滤掉干扰字符
                 continue;
             }
 
-            for (let j = i; j < word.length; j++) {
-                if (!parent[ word[ j ] ]) {
+            for (let j = i; j < text.length; j++) {
+                if (!parent[ text[ j ] ]) {
                     exists = false;
                     break;
-                } else if (parent[ word[ j ] ] && parent[ word[ j ] ].isEnd) {
+                } else if (parent[ text[ j ] ] && parent[ text[ j ] ].isEnd) {
                     exists = true;
                     break;
                 }
-                parent = parent[ word[ j ] ];
+                parent = parent[ text[ j ] ];
             }
 
             if (exists) {
@@ -85,7 +85,7 @@ module.exports = {
         let sensitiveKeyWords = {};
         for (let i = 0; i < text.length; i++) {
             let parent = this.tree;
-            if(parent[text[i]] === null  || parent[text[i]] === undefined) {
+            if (parent[ text[ i ] ] === null || parent[ text[ i ] ] === undefined) {
                 continue
             }
 
@@ -94,8 +94,8 @@ module.exports = {
                 // 找到了就暂存，并将parent指向其子节点
                 if (parent[ text[ j ] ] !== undefined) {
                     tmpWords.push(text[ j ]);
-                    if (parent[text[j]].isEnd) {
-                        sensitiveKeyWords[tmpWords.join("")] = true;
+                    if (parent[ text[ j ] ].isEnd) {
+                        sensitiveKeyWords[ tmpWords.join("") ] = true;
                         // 减少外层循环次数
                         i = j;
                         break
