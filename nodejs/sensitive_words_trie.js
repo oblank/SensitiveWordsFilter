@@ -14,6 +14,7 @@ module.exports = {
         }
     },
 
+    // 添加敏感词，构建Trie
     addWord(word) {
         if (word != null || word !== "") {
             let parent = this.tree;
@@ -27,27 +28,33 @@ module.exports = {
         }
     },
 
+    // 移除空格
+    removeSpace(text) {
+        return text.toString().trim().replace(/[\s| ]/ig, '');
+    },
+
     // 检查是否包含敏感词，检查到一个则停止检测
     sensitiveCheck(word) {
-        var parent = this.tree,
+        word = this.removeSpace(word);
+        if (word === "" || word === null) {
+            return word;
+        }
+
+        let parent = this.tree,
             exists = false;
 
-        for (var i = 0; i < word.length; i++) {
+        for (let i = 0; i < word.length; i++) {
             // TODO 加强干扰字符的处理
             if (['*', '', ' ', ',', '.', '?'].indexOf(word[ i ]) !== -1) {
                 // 过滤掉干扰字符
                 continue;
             }
 
-            for (var j = i; j < word.length; j++) {
-                console.log(`i=${i}, j=${j}, word[${j}]=${word[ j ]}, parent[word[j]] = ${parent[ word[ j ] ]}`)
+            for (let j = i; j < word.length; j++) {
                 if (!parent[ word[ j ] ]) {
                     exists = false;
-                    parent = parent;
                     break;
-                }
-
-                if (parent[ word[ j ] ].isEnd) {
+                } else if (parent[ word[ j ] ] && parent[ word[ j ] ].isEnd) {
                     exists = true;
                     break;
                 }
@@ -62,62 +69,46 @@ module.exports = {
     },
 
     // 替换敏感词
-    filter(word, options) {
-        let parent = this.tree;
-        for (let i = 0; i < word.length; i++) {
-            if (['*', '', ' ', ',', '.', '?'].indexOf(word[ i ]) !== -1) {
-                // 过滤掉干扰字符
-                continue;
-            }
-            let exists        = false,
-                skip          = 0,
-                sensitiveWord = '';
-
-            for (let j = i; j < word.length; j++) {
-                sensitiveWord = sensitiveWord + word[ j ];
-                skip = j - i;
-                if (['*', '', ' ', ',', '.', '?'].indexOf(word[ j ]) !== -1) {
-                    // 过滤掉干扰字符
-                    if (j === word.length - 1 && skip !== 0) {
-                        exists = true;
-                    }
-                    continue;
-                }
-
-                if (!parent[ word[ j ] ]) {
-                    exists = false;
-                    // parent = parent;
-                    break;
-                }
-
-                // 最大长度匹配
-                if (parent[ word[ j ] ].isEnd && (Object.keys(parent[ word[ j ] ]).length === 1 || j === word.length - 1)) {
-                    exists = true;
-                    break;
-                }
-                parent = parent[ word[ j ] ];
-            }
-
-            if (skip > 1) {
-                i += skip - 1;
-            }
-
-            if (!exists) {
-                continue;
-            }
-
-            let stars = '*';
-            for (var k = 0; k < skip; k++) {
-                stars = stars + '*';
-            }
-
-            word = word.replace(new RegExp(sensitiveWord, 'g'), stars);
+    replace(text, options) {
+        text = this.removeSpace(text);
+        if (text === "" || text === null) {
+            return text;
         }
+
+        let sensitiveKeyWords = [];
+        let parent = this.tree;
+        for (let i = 0; i < text.length; i++) {
+            if(parent[text[i]] === null  || parent[text[i]] === undefined) {
+                continue
+            }
+
+            let tmpWords = [];
+
+            for (let j = i; j < text.length; j++) {
+                console.log(`i=${i}, j=${j}`)
+                // 找到了就暂存，并将parent指向其子节点
+                if (parent[ text[ j ] ] !== undefined) {
+                    // console.log("word[ j ]", word[ j ]);
+                    tmpWords.push(text[ j ]);
+                    parent = parent[ text[ j ] ];
+                }
+
+                if (parent[text[j]] && parent[text[j]].isEnd) {
+                    console.log(tmpWords);
+                    sensitiveKeyWords.push(tmpWords.join());
+                    break
+                }
+            }
+        }
+
+        console.log(sensitiveKeyWords);
+        // word = word.replace(new RegExp(sensitiveWord, 'g'), stars);
+
 
         if (options && options.callback) {
             options.callback(word);
         } else {
-            return word;
+            return text;
         }
     }
 };
