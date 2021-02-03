@@ -1,4 +1,4 @@
-package golang
+package main
 
 import (
 	"fmt"
@@ -63,17 +63,18 @@ func (t *TrieFilter) Replace(text string) string {
 			continue
 		}
 		var tmpWords []rune
-		for j := i; ; j++ {
-			if node.End || j >= length {
-				sensitiveKeyWords[string(tmpWords)] = true
-				// 如果在这里替换会出现多个重复敏感词执行替换的问题!
-				i = j - 1
-				break
-			}
-
+		for j := i; j < length  ; j++ {
 			if _, ok := node.Children[chars[j]]; ok {
 				node = node.Children[chars[j]]
 				tmpWords = append(tmpWords, chars[j])
+
+				if node.End {
+                    sensitiveKeyWords[string(tmpWords)] = true
+                    // 如果在这里替换会出现多个重复敏感词执行替换的问题!
+                    // 减少外层循环次数
+                    i = j - 1
+                    break
+                }
 			}
 		}
 	}

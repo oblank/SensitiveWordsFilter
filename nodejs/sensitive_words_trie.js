@@ -12,6 +12,7 @@ module.exports = {
         for (let word of words) {
             this.addWord(word);
         }
+        console.log(JSON.stringify(this.tree));
     },
 
     // 添加敏感词，构建Trie
@@ -75,38 +76,43 @@ module.exports = {
             return text;
         }
 
-        let sensitiveKeyWords = [];
-        let parent = this.tree;
+        if (!options) {
+            options = {}
+        }
+        if (options.placeholder === undefined) {
+            options.placeholder = "*"
+        }
+
+        let sensitiveKeyWords = {};
         for (let i = 0; i < text.length; i++) {
+            let parent = this.tree;
             if(parent[text[i]] === null  || parent[text[i]] === undefined) {
                 continue
             }
 
             let tmpWords = [];
-
             for (let j = i; j < text.length; j++) {
-                console.log(`i=${i}, j=${j}`)
                 // 找到了就暂存，并将parent指向其子节点
                 if (parent[ text[ j ] ] !== undefined) {
-                    // console.log("word[ j ]", word[ j ]);
                     tmpWords.push(text[ j ]);
+                    if (parent[text[j]].isEnd) {
+                        sensitiveKeyWords[tmpWords.join("")] = true;
+                        // 减少外层循环次数
+                        i = j;
+                        break
+                    }
                     parent = parent[ text[ j ] ];
-                }
-
-                if (parent[text[j]] && parent[text[j]].isEnd) {
-                    console.log(tmpWords);
-                    sensitiveKeyWords.push(tmpWords.join());
-                    break
                 }
             }
         }
 
-        console.log(sensitiveKeyWords);
-        // word = word.replace(new RegExp(sensitiveWord, 'g'), stars);
-
+        // 替换
+        Object.keys(sensitiveKeyWords).forEach(keyWord => {
+            text = text.replace(new RegExp(keyWord, 'g'), options.placeholder.toString().repeat(keyWord.length));
+        });
 
         if (options && options.callback) {
-            options.callback(word);
+            options.callback(text);
         } else {
             return text;
         }
