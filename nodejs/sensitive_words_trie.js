@@ -12,14 +12,13 @@ module.exports = {
         for (let word of words) {
             this.addWord(word);
         }
-        console.log(JSON.stringify(this.tree));
     },
 
     // 添加敏感词，构建Trie
     addWord(word) {
         if (word != null || word !== "") {
             let parent = this.tree;
-            for (var i = 0; i < word.length; i++) {
+            for (let i = 0; i < word.length; i++) {
                 if (!parent[ word[ i ] ]) {
                     parent[ word[ i ] ] = {};
                 }
